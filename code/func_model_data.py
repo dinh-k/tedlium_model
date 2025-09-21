@@ -1,7 +1,6 @@
 import os
 import torch
 import numpy as np
-from torch.autograd import Variable
 
 def data_shuffle(datafile, is_shuffle=True):
     data_words = datafile['data_words']
@@ -84,9 +83,9 @@ def data_producer(data, batch_size, seq_length, qu_steps=20, cuda=False, use_dur
         x_d = datanp_d[pointer:pointer+seq_length,:,:]
         y = datanp[pointer+1:pointer+seq_length+1,:]
         y_d = datanp_d_s[pointer+1:pointer+seq_length+1,:]
-        yield ((Variable(x, volatile=evaluation), Variable(x_d, volatile=evaluation)),
-               (Variable(y.view(-1), volatile=evaluation),
-                Variable(y_d.view(-1), volatile=evaluation)), ii)
+        yield ((x, x_d),
+               (y.view(-1),
+                y_d.view(-1)), ii)
 
 def data_producer_combined(data, batch_size, seq_length, qu_steps=20, cuda=False, use_durs='input', evaluation=False):
 
@@ -115,9 +114,9 @@ def data_producer_combined(data, batch_size, seq_length, qu_steps=20, cuda=False
         datanp_d = datanp_d.cuda()
 
     for (ii, pointer) in enumerate(pointers):
-        x = [Variable(d[pointer:pointer+seq_length,:], volatile=evaluation) for d in datanp]
-        x_d = Variable(datanp_d[pointer:pointer+seq_length,:,:], volatile=evaluation)
-        y = [Variable(d[pointer+1:pointer+seq_length+1,:], volatile=evaluation) for d in datanp]
+        x = [d[pointer:pointer+seq_length,:] for d in datanp]
+        x_d = datanp_d[pointer:pointer+seq_length,:,:]
+        y = [d[pointer+1:pointer+seq_length+1,:] for d in datanp]
         # Input: previous phone, previous word, duration of previous phone and pause
         # Output: current phone, current word, next word
         yield ((x[3],x[0],x_d),(y[3].view(-1),y[1].view(-1),y[2].view(-1)),ii)

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 class RNNModel(nn.Module):
@@ -57,14 +56,14 @@ class RNNModel(nn.Module):
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
         if self.rnn_type in ['LSTM', 'LSTM2']:
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_(),
+                    weight.new(self.nlayers, bsz, self.nhid).zero_())
         elif self.rnn_type == 'HMLSTM':
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()+1),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()+1),
-                    Variable(weight.new(self.nlayers, bsz).zero_()+1))
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_()+1,
+                    weight.new(self.nlayers, bsz, self.nhid).zero_()+1,
+                    weight.new(self.nlayers, bsz).zero_()+1)
         else:
-            return Variable(weight.new(self.nlayers, bsz, self.nhid).zero_())
+            return weight.new(self.nlayers, bsz, self.nhid).zero_()
 
     def criterion(self, output, targets):
         loss_fcn = nn.CrossEntropyLoss()
@@ -126,15 +125,15 @@ class TedliumModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        if self.rnn_type in ['LSTM', 'LSTM2']:
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+        if self.rnn_type == 'LSTM':
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_(),
+                    weight.new(self.nlayers, bsz, self.nhid).zero_())
         elif self.rnn_type == 'HMLSTM':
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()+1),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()+1),
-                    Variable(weight.new(self.nlayers, bsz).zero_()+1))
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_()+1,
+                    weight.new(self.nlayers, bsz, self.nhid).zero_()+1,
+                    weight.new(self.nlayers, bsz).zero_()+1)
         else:
-            return Variable(weight.new(self.nlayers, bsz, self.nhid).zero_())
+            return weight.new(self.nlayers, bsz, self.nhid).zero_()
 
     def criterion(self, output, targets):
         loss_fcn = nn.CrossEntropyLoss()
@@ -228,10 +227,10 @@ class TedliumModelCombined(TedliumModel):
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
         if self.rnn_type == 'LSTM':
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_(),
+                    weight.new(self.nlayers, bsz, self.nhid).zero_())
         else:
-            return Variable(weight.new(self.nlayers, bsz, self.nhid).zero_())
+            return weight.new(self.nlayers, bsz, self.nhid).zero_()
 
     def criterion(self, output, targets):
         loss_fcn = nn.CrossEntropyLoss()
@@ -313,10 +312,10 @@ class TedliumModelCombined2(TedliumModel):
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
         if self.rnn_type == 'LSTM':
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
+            return (weight.new(self.nlayers, bsz, self.nhid).zero_(),
+                    weight.new(self.nlayers, bsz, self.nhid).zero_())
         else:
-            return Variable(weight.new(self.nlayers, bsz, self.nhid).zero_())
+            return weight.new(self.nlayers, bsz, self.nhid).zero_()
 
     def criterion(self, output, targets):
         loss_fcn = nn.CrossEntropyLoss()
@@ -328,8 +327,8 @@ class TedliumModelCombined2(TedliumModel):
 
 
 def repackage_hidden(h):
-    """Wraps hidden states in new Variables, to detach them from their history."""
-    if type(h) == Variable:
-        return Variable(h.data)
+    """Wraps hidden states in new tensors, to detach them from their history."""
+    if isinstance(h, torch.Tensor):
+        return h.detach()
     else:
         return tuple(repackage_hidden(v) for v in h)

@@ -95,40 +95,40 @@ for i_talk in tqdm(range(11)):
 
     for (data,targets,batch) in data_producer_combined(data_source, eval_batch_size, args.bptt, cuda=args.cuda, use_durs=args.use_durs, evaluation=True):
         
-        output, hidden = model(data, hidden)
-        loss, loss_phone, loss_word = model.criterion(output, targets)
-        total_loss += loss.data
-        phone_loss += loss_phone.data
-        word_loss += loss_word.data
-        hidden = repackage_hidden(hidden)
+        with torch.no_grad():
+            output, hidden = model(data, hidden)
+            loss, loss_phone, loss_word = model.criterion(output, targets)
+            total_loss += loss.data
+            phone_loss += loss_phone.data
+            word_loss += loss_word.data
+            hidden = repackage_hidden(hidden)
 
-        # Fill in data frame
-        indices = range(batch*args.bptt, batch*args.bptt+args.bptt)
-        df.loc[indices, 'phone'] = datafile['vocab_phones'][data[0][:,0].data.numpy()]
-        df.loc[indices, 'target_phone'] = datafile['vocab_phones'][targets[0].data.numpy()]
-        df.loc[indices, 'last_word'] = datafile['vocab_words'][data[1][:,0].data.numpy()]
-        df.loc[indices, 'target_word'] = datafile['vocab_words'][targets[1].data.numpy()]
+            # Fill in data frame
+            indices = range(batch*args.bptt, batch*args.bptt+args.bptt)
+            df.loc[indices, 'phone'] = datafile['vocab_phones'][data[0][:,0].data.numpy()]
+            df.loc[indices, 'target_phone'] = datafile['vocab_phones'][targets[0].data.numpy()]
+            df.loc[indices, 'last_word'] = datafile['vocab_words'][data[1][:,0].data.numpy()]
+            df.loc[indices, 'target_word'] = datafile['vocab_words'][targets[1].data.numpy()]
 
-        # Phones
-        p_phones = torch.nn.functional.softmax(output[0].view(-1,ntokens_phone)).data.numpy()
-        df.loc[indices,phones] = p_phones
-        p = np.array(df.loc[indices,phones], dtype=float)
-        df.loc[indices, 'entropy'] = -np.sum(p*np.log(p),1)
-        for index in indices:
-            df.loc[index, 'surprise'] = -np.log(df.loc[index, df.loc[index,'target_phone']])
+            # Phones
+            p_phones = torch.nn.functional.softmax(output[0].view(-1,ntokens_phone), dim=1).data.numpy()
+            df.loc[indices,phones] = p_phones
+            p = np.array(df.loc[indices,phones], dtype=float)
+            df.loc[indices, 'entropy'] = -np.sum(p*np.log(p),1)
+            for index in indices:
+                df.loc[index, 'surprise'] = -np.log(df.loc[index, df.loc[index,'target_phone']])
 
-        # Words
-        p_words[indices,:] = torch.nn.functional.softmax(output[1].view(-1,ntokens_word)).data.numpy()
-        # df.loc[indices,words] = p_words
+            # Words
+            p_words[indices,:] = torch.nn.functional.softmax(output[1].view(-1,ntokens_word), dim=1).data.numpy()
 
-    results = (total_loss[0]/(batch+1), phone_loss[0]/(batch+1), word_loss[0]/(batch+1))
+    results = (total_loss.item()/(batch+1), phone_loss.item()/(batch+1), word_loss.item()/(batch+1))
 
     # Post-process data frame before saving
 
     df = df.iloc[:n_t]
-    df.iloc[-1]['target_phone'] = ''
-    df.iloc[-1]['target_word'] = ''
-    df.iloc[-1]['surprise'] = np.nan
+    df.loc[df.index[-1], 'target_phone'] = ''
+    df.loc[df.index[-1], 'target_word'] = ''
+    df.loc[df.index[-1], 'surprise'] = np.nan
 
     df.loc[df.index[1:],'word'] = df.iloc[:-1]['target_word'].values
 
