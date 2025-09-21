@@ -1,5 +1,5 @@
 Adapted from [PyTorch example](https://github.com/pytorch/examples/tree/master/word_language_model).
-Modernization and Bug Fixes applied to [tedlium_model](https://github.com/pwdonh/tedlium_model/tree/newcode2022).
+Modernization and bug fixes applied to [tedlium_model](https://github.com/pwdonh/tedlium_model/tree/newcode2022).
 
 ## Problem Statement
 
