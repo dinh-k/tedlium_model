@@ -1,5 +1,6 @@
 Adapted from [PyTorch example](https://github.com/pytorch/examples/tree/master/word_language_model).
 Modernization and bug fixes applied to [tedlium_model](https://github.com/pwdonh/tedlium_model/tree/newcode2022).
+This modernization ensures the TED-LIUM model code works reliably with current PyTorch versions while maintaining all original functionality.
 
 ## Problem Statement
 
@@ -8,32 +9,27 @@ The original code was written for PyTorch 0.2.0 and contained several deprecated
 2. **Compatibility issues** with modern PyTorch versions
 3. **Deprecation warnings** for removed features
 
-## Root Causes Identified
+## Key Benefits
 
-### 1. Deprecated `Variable` Class
-- **Issue**: The code extensively used `torch.autograd.Variable` which was removed in PyTorch 0.4.0
-- **Impact**: Caused infinite recursion in `repackage_hidden` function
-- **Location**: Multiple files including `func_model.py` and `func_model_data.py`
+1. **Eliminated Recursion Errors**: Fixed infinite recursion in `repackage_hidden`
+2. **Modern PyTorch Support**: Removed all deprecated features
+3. **Improved Performance**: Better memory management with `torch.no_grad()`
+4. **Future-Proof**: Compatible with upcoming pandas 3.0
+5. **Cleaner Output**: Reduced warning messages
+6. **Maintained Functionality**: All original features preserved
 
-### 2. Deprecated `volatile` Parameter
-- **Issue**: Used `volatile=True/False` parameter which was deprecated and removed
-- **Impact**: Caused warnings and potential memory issues
-- **Location**: Data processing functions in `func_model_data.py`
+## Files Modified
 
-### 3. Incorrect Tensor Indexing
-- **Issue**: Using `[0]` indexing on 0-dimensional tensors
-- **Impact**: Caused `IndexError: invalid index of a 0-dim tensor`
-- **Location**: `generate_probabilities.py`
+1. `func_model.py` - Core model updates and `repackage_hidden` fix
+2. `func_model_data.py` - Data processing modernization
+3. `generate_probabilities.py` - Main script updates and error fixes
+4. Created `../output/` directory for file saving
 
-### 4. Implicit Softmax Dimensions
-- **Issue**: Missing `dim` parameter in `torch.nn.functional.softmax`
-- **Impact**: Deprecation warnings
-- **Location**: `generate_probabilities.py`
+## Compatibility
 
-### 5. Pandas Chained Assignment
-- **Issue**: Using chained assignment which will break in pandas 3.0
-- **Impact**: FutureWarning messages
-- **Location**: `generate_probabilities.py`
+- **PyTorch**: Compatible with versions 1.0+ (tested with current versions)
+- **Python**: 3.6+ (recommended 3.8+)
+- **Pandas**: 1.0+ (with proper indexing)
+- **NumPy**: 1.16+
 
-
-Detailed changes documented in the [updated README](https://github.com/dinh-k/tedlium_model/blob/bugfix-modernization/code/README.md).
+All detailed changes are documented in [README](https://github.com/dinh-k/tedlium_model/blob/bugfix-modernization/code/README.md).
